@@ -1,7 +1,7 @@
 import PhoneBook from "./Phonebook/Phonebook";
 import { Container } from "./App.styled";
 
-function App() {
+export default function App() {
   return (
     <Container>
       <PhoneBook/>
@@ -9,4 +9,4 @@ function App() {
   )
 }
 
-export default App;
+

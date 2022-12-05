@@ -1,15 +1,16 @@
+import { Field } from "formik";
 import styled from "styled-components";
 
 export const Block = styled.div`
  display: block;
 `
 
-export const Label = styled.label`
+export const LabelForm = styled.label`
   font-size: 20px;
   margin-right: 10px;
 
 `
-export const Input = styled.input`
+export const Input = styled(Field)`
   font-size: 16px;
   padding: 10px;
   outline: none;
@@ -47,4 +48,3 @@ export const Container = styled.div`
   background-color: orange;
   padding-bottom: 20px;
 `
-export const Form = styled.form``

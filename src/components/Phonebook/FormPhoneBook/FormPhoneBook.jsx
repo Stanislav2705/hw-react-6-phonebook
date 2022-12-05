@@ -1,168 +1,75 @@
-import { nanoid } from "nanoid";
-import { Label,Input,Block,Text,Button,Form,Container } from "./FormPhoneBook.styled";
-import { useState } from "react";
+import { Formik, Form } from "formik";
+import * as yup from 'yup';
+import { LabelForm, Input, Block, Text, Button,Container } from "./FormPhoneBook.styled";
+import { useDispatch, useSelector } from "react-redux";
+import { getContacts } from "redux/selectors";
+import { Notify } from 'notiflix';
+import { addContact } from 'redux/contacts/slice';
+import ErrorForm from "../ErrorForm/ErrorForm";
 
 const initialState = {
   name: '',
   number: '',
-  invalidForm: false,
 }
 
+const validation = yup.object().shape({
+  name: yup.string().matches(/^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/, 'Name may contain only letters, apostrophe, dash and spaces.').required('Please fill in the name'),
+  number: yup.string().matches(/^(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){10,14}(\s*)?$/, 'Phone number must be digits and can contain spaces, dashes, parentheses and can start with +').required('Please fill in the number'),
+});
 
-export default function FormPhoneBook({onSubmit}) {
-  const [state, setState] = useState(initialState);
 
-  const nameId = nanoid();
-  const numberId = nanoid();
+export default function FormPhoneBook() {
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
 
-   const handleChange = (e) => {
-    const {name,value} = e.target
-     setState((prev) => {
-       return {
-         ...prev,
-        [name]: value,
-        invalidForm: false,
+    const handleSubmit = (values,{resetForm}) => {
+      function isDublicateName(values) {
+        return contacts.find(
+          contact => contact.name.toLowerCase() === values.name.toLowerCase()
+        )
       }
-    })
-   }
 
-    const handleSubmit = (e) => {
-    e.preventDefault();
-    const { name, number } = state;
-    const isValid = validateForm(state);
-    if (isValid) {
-      onSubmit({name,number})
-      setState(initialState)
-    } else {
-      setState((prev) => {
-        return {
-          ...prev,
-          invalidForm: true,
-        }
-      })
-    }
+      if (isDublicateName(values)) {
+        return Notify.info(`${values.name} is already in contacts.`)
+      }
+
+      dispatch(addContact(values));
+      resetForm()
     }
 
-    const validateForm = (data) => {
-    const isValid = !!data.name && !!data.number
-    return isValid;
-  }
+
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialState}
+      validationSchema={validation}
+      onSubmit={handleSubmit}
+    >
+      <Form autoComplete="off">
         <Container>
-            <Block>
-              <Label htmlFor={nameId}><Text>Name</Text></Label>
+          <Block>
+            <LabelForm><Text>Name</Text>
               <Input
-                id={nameId}
                 name="name"
                 type="text"
-                value={state.name}
-                pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-                onChange={handleChange}
-              minLength={3}
-              autoComplete="off"
               />
-            </Block>
-            <Block>
-              <Label htmlFor={numberId}><Text>Number</Text></Label>
+            </LabelForm>
+            <ErrorForm name='name'/>
+          </Block>
+          <Block>
+            <LabelForm><Text>Number</Text>
               <Input
-                id={numberId}
                 type="tel"
                 name="number"
-                value={state.number}
-                onChange={handleChange}
-                pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-                title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-              required
-              autoComplete="off"
               />
+            </LabelForm>
+            <ErrorForm name='number'/>
           </Block>
-          </Container>
-            <Button>Add contact</Button>
-            {state.invalidForm ? <div>Please fill in the fields</div> : null}
-          </Form>
+        </Container>
+        <Button>Add contact</Button>
+      </Form>
+    </Formik>
   )
 }
 
 
-// export default class FormPhoneBook extends Component {
-//   state = {
-//     name: '',
-//     number: '',
-//     invalidForm: false,
-//   }
-
-//   nameId = nanoid();
-//   numberId = nanoid();
-
-  // handleChange = (e) => {
-  //   const {name,value} = e.target
-  //   this.setState({
-  //     [name]: value,
-  //     invalidForm: false,
-  //   })
-  // }
-
-//   handleSubmit = (e) => {
-//     e.preventDefault();
-//     const { name, number } = this.state;
-//     const isValid = this.validateForm(this.state);
-//     if (isValid) {
-//       this.props.onSubmit({name,number})
-//       this.setState({
-//         name: '',
-//         number: '',
-//       })
-//     } else {
-//       this.setState({
-//         invalidForm: true,
-//       })
-//     }
-
-//   }
-
-//   validateForm = (data) => {
-//     const isValid = !!data.name
-//     return isValid;
-//   }
-
-//   render() {
-//     const { nameId, numberId, handleSubmit, handleChange } = this;
-//     const { invalidForm } = this.state;
-//     return (
-//       <Form onSubmit={handleSubmit}>
-//         <Container>
-//             <Block>
-//               <Label htmlFor={nameId}><Text>Name</Text></Label>
-//               <Input
-//                 id={nameId}
-//                 name="name"
-//                 type="text"
-//                 value={this.state.name}
-//                 onChange={handleChange}
-//               minLength={3}
-//               autoComplete="off"
-//               />
-//             </Block>
-//             <Block>
-//               <Label htmlFor={numberId}><Text>Number</Text></Label>
-//               <Input
-//                 id={numberId}
-//                 type="tel"
-//                 name="number"
-//                 value={this.state.number}
-//                 onChange={handleChange}
-//                 pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-//                 title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-//               required
-//               autoComplete="off"
-//               />
-//           </Block>
-//           </Container>
-//             <Button>Add contact</Button>
-//             {invalidForm ? <div>Please fill in the fields</div> : null}
-//           </Form>
-//     )
-//   }
-// }
